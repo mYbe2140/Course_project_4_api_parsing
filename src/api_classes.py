@@ -76,3 +76,79 @@ class HeadHunterAPI(AbstractAPI):
                 converted_vacancies.append(vacancy_params)
 
         return converted_vacancies
+
+
+class SuperJobAPI(AbstractAPI):
+    """Класс для получения информации по API с сайта SuperJob.ru"""
+
+    def __init__(self, vacancy: str):
+        self.vacancy = vacancy
+        self.vacancies = []
+        self.__url = 'https://api.superjob.ru/2.0/vacancies/'
+        self.__key = 'objects'
+        self.__params = {'keyword': self.vacancy,
+                         'page': 0,
+                         'count': 100
+                         }
+        self.__headers = {
+            'X-Api-App-Id': "v3.r.137731249.b7fe13521a4bbb6ac31e5abf2855f5ca9db946d0.3b6587be779e179b65760cac0d523dcc8a3b38a2"
+        }
+
+    @property
+    def url(self):
+        return self.__url
+
+    @property
+    def params(self):
+        return self.__params
+
+    @property
+    def key(self):
+        return self.__key
+
+    @property
+    def headers(self):
+        return self.__headers
+
+    def get_requests(self):
+        data = requests.get(self.__url, headers=self.__headers, params=self.__params)
+        return data.json()[self.__key]
+
+    def get_vacancies(self, pages_count=1):
+        while self.__params['page'] < pages_count:
+            print(f"SuperJob, Парсинг страницы {self.__params['page'] + 1}", end=": ")
+            try:
+                response = self.get_requests()
+            except ParsingError:
+                print('Ошибка получения данных')
+                break
+            self.vacancies.extend(response)
+            self.__params['page'] += 1
+        return self.vacancies
+
+    def validate_vacancies(self):
+        """Валидация списка вакансий с фильтрацией вакансий не входящих в запрос"""
+
+        self.get_vacancies()
+        converted_vacancies = []
+        for vac in self.vacancies:
+            if vac['payment_from'] is None and vac['payment_to'] is None:
+                salary = {'salary': False}
+            else:
+                salary = {'salary': True}
+
+                vacancy_params = {'id': vac['id'],
+                                  'title': vac['profession'],
+                                  'employer': vac['firm_name'],
+                                  'url': vac['link'],
+                                  'experience': vac['experience']['title'],
+                                  'salary_from': vac['payment_from'],
+                                  'salary_to': vac['payment_to'],
+                                  'currency': vac['currency'],
+                                  'api': 'SuperJob'
+                                  }
+                vacancy_params.update(salary)
+                converted_vacancies.append(vacancy_params)
+
+        return converted_vacancies
+
