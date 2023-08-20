@@ -16,18 +16,19 @@ def data_search(vacancy):
                        f'3 - поиск на обеих платформах\n'
                        f'Ваш выбор: '
                        )
+    num_pages = input(f'Введите количесвто страниц для поиска: ')
 
     if user_input == '1':
         hh = HeadHunterAPI(vacancy)
-        converted_vacancies = hh.validate_vacancies()
+        converted_vacancies = hh.get_vacancies(pages_count=int(num_pages))
     elif user_input == '2':
         sj = SuperJobAPI(vacancy)
-        converted_vacancies = sj.validate_vacancies()
+        converted_vacancies = sj.get_vacancies(pages_count=int(num_pages))
     else:
         hh = HeadHunterAPI(vacancy)
         sj = SuperJobAPI(vacancy)
-        converted_vacancies = hh.validate_vacancies()
-        converted_vacancies.extend(sj.validate_vacancies())
+        converted_vacancies = hh.get_vacancies(pages_count=int(num_pages))
+        converted_vacancies.extend(sj.get_vacancies(pages_count=int(num_pages)))
 
     return converted_vacancies
 

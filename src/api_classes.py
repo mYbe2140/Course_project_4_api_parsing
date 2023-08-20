@@ -1,6 +1,7 @@
 import requests
 from configparser import ParsingError
 from src.abstract_class import AbstractAPI
+import os
 
 
 class HeadHunterAPI(AbstractAPI):
@@ -35,6 +36,8 @@ class HeadHunterAPI(AbstractAPI):
         return data.json()[self.__key]
 
     def get_vacancies(self, pages_count=1):
+        """Обрабатывает вакансии по запросу"""
+        converted_vacancies = []
         while self.__params['page'] < pages_count:
             print(f"HeadHunter, Парсинг страницы {self.__params['page'] + 1}", end=": \n")
             try:
@@ -44,13 +47,7 @@ class HeadHunterAPI(AbstractAPI):
                 break
             self.vacancies.extend(response)
             self.__params['page'] += 1
-        return self.vacancies
 
-    def validate_vacancies(self):
-        """Валидация списка вакансий с фильтрацией вакансий не входящих в запрос"""
-
-        self.get_vacancies()
-        converted_vacancies = []
         for vac in self.vacancies:
             if self.vacancy in vac['name'].lower():
                 if vac.get('salary') is not None:
@@ -91,7 +88,7 @@ class SuperJobAPI(AbstractAPI):
                          'count': 100
                          }
         self.__headers = {
-            'X-Api-App-Id': "v3.r.137731249.b7fe13521a4bbb6ac31e5abf2855f5ca9db946d0.3b6587be779e179b65760cac0d523dcc8a3b38a2"
+            'X-Api-App-Id': os.getenv('API_KEY_SUPER_JOB')
         }
 
     @property
@@ -115,8 +112,10 @@ class SuperJobAPI(AbstractAPI):
         return data.json()[self.__key]
 
     def get_vacancies(self, pages_count=1):
+        """Обрабатывает вакансии по запросу"""
+        converted_vacancies = []
         while self.__params['page'] < pages_count:
-            print(f"SuperJob, Парсинг страницы {self.__params['page'] + 1}", end=": ")
+            print(f"SuperJob, Парсинг страницы {self.__params['page'] + 1}", end=": \n")
             try:
                 response = self.get_requests()
             except ParsingError:
@@ -124,13 +123,7 @@ class SuperJobAPI(AbstractAPI):
                 break
             self.vacancies.extend(response)
             self.__params['page'] += 1
-        return self.vacancies
 
-    def validate_vacancies(self):
-        """Валидация списка вакансий с фильтрацией вакансий не входящих в запрос"""
-
-        self.get_vacancies()
-        converted_vacancies = []
         for vac in self.vacancies:
             if vac['payment_from'] is None and vac['payment_to'] is None:
                 salary = {'salary': False}
